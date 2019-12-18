@@ -18,7 +18,7 @@ The following services are behind the Ocelot:
 
 MvcTestside sits in front of the Gateway.
 
-[!Diagram.png]()
+![Architecture diagram](diagram.png)
 
 ## Permissions
 
