@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Home Page";
 }
 
@@ -7,5 +7,19 @@
     <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
 </div>
 
-<a asp-controller="Home"
-   asp-action="CallApiWithClientId">Call API with Client ID (not using authenticated user)</a>
+<a asp-controller="Home" asp-action="CallMicroservice1">Call Microservice1</a>
+<br />
+<a asp-controller="Home" asp-action="CallMicroservice2">Call Microservice2</a>
+<br />
+<a asp-controller="Home" asp-action="CallSuperMicroservice">Call Supermicroservice (not authorized, Ocelot will block this)</a>
+<br/>
+<br />
+<a asp-controller="Home" asp-action="TestMicroservice1">Test Microservice1 calling Microservice2</a>
+<br />
+<a asp-controller="Home" asp-action="TestMicroservice2">Test Microservice2 calling Microservice1</a>
+<br />
+<a asp-controller="Home" asp-action="TestSuperMicroservice">Test Supermicroservice calling Microservice1 and Microservice2 (not authorized, Ocelot will block this)</a>
+<br />
+<a asp-controller="Home" asp-action="TestSuperMicroservice2">Test Microservice1 calling Supermicroservice (not authorized)</a>
+<br />
+<a asp-controller="Home" asp-action="TestSuperMicroservice3">Test Microservice2 calling Supermicroservice (not authorized)</a>

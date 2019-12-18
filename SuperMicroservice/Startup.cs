@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using IdentityModel.Client;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
@@ -27,13 +28,33 @@ namespace Api
         {
             services.AddControllers();
 
+            // Create the clients which are used to call other microservices
+            services.AddAccessTokenManagement(options =>
+            {
+                options.Client.Clients.Add("identityserver", new TokenClientOptions
+                {
+                    Address = "https://localhost:44334/idservice/connect/token",
+                    ClientId = "mysupermicroserviceclient",
+                    ClientSecret = "secret"
+                });
+            });
+
+            services.AddClientAccessTokenClient("microservice1", configureClient: client =>
+            {
+                client.BaseAddress = new Uri("https://localhost:44334/api/v1/microservice1/");
+            });
+
+            services.AddClientAccessTokenClient("microservice2", configureClient: client =>
+            {
+                client.BaseAddress = new Uri("https://localhost:44334/api/v1/microservice2/");
+            });
+
+            // Identifies this microservice
             services.AddAuthentication("Bearer")
                 .AddJwtBearer("Bearer", options =>
                 {
-                    options.Authority = "http://localhost:5000";
-                    options.RequireHttpsMetadata = false;
-
-                    options.Audience = "api1";
+                    options.Authority = "https://localhost:44334/idservice";
+                    options.Audience = "supermicroservice";
                 });
         }
 

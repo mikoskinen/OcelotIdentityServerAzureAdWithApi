@@ -1,4 +1,4 @@
-﻿@{
+@{
     ViewData["Title"] = "Privacy Policy";
 }
 <h1>@ViewData["Title"]</h1>
@@ -9,7 +9,7 @@
 <h1>Is Admin: @User.IsInRole("Administrator")</h1>
 
 <a asp-controller="Home"
-   asp-action="CallApiWithAuthenticatedUser">Call API with authenticated user</a>
+   asp-action="CallApiWithAuthenticatedUser">Call SuperMicroservice with authenticated user's token</a>
 
 <h2>Claims</h2>
 

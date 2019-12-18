@@ -12,6 +12,8 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.AzureAD.UI;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -38,7 +40,13 @@ namespace IdentityServer
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddControllersWithViews();
+            services.Configure<ForwardedHeadersOptions>(options =>
+            {
+                options.ForwardedHeaders =
+                    ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
+            });
+            services.AddControllersWithViews()
+                .AddRazorRuntimeCompilation();
 
             var tenantId = "37e55da6-fb62-456a-8d8e-f6f5b649092f";
             var clientId = "5be19e30-1ea9-4690-a37f-960d2190d4a3";
@@ -61,7 +69,12 @@ namespace IdentityServer
                     };
                 });
 
-            var builder = services.AddIdentityServer()
+            var builder = services.AddIdentityServer(x =>
+            {
+                x.IssuerUri = "https://localhost:44334/idservice";
+                
+                //x.PublicOrigin = "https://localhost:44334/";
+            })
                 .AddInMemoryIdentityResources(Config.Ids)
                 .AddInMemoryApiResources(Config.Apis)
                 .AddInMemoryClients(Config.Clients)
@@ -74,15 +87,40 @@ namespace IdentityServer
 
         public void Configure(IApplicationBuilder app)
         {
+            app.Use((context, next) =>
+            {
+                context.Request.PathBase = new PathString("/idservice");
+                return next();
+            });
+
             if (Environment.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
 
+            app.UseForwardedHeaders();
+
             app.UseStaticFiles();
             app.UseRouting();
 
-            app.UseIdentityServer();
+            app.Use(async (context, next) =>
+            {
+                var headers = context.Request.Headers;
+                foreach (var header in headers)
+                {
+                    System.Diagnostics.Debug.WriteLine(header.Key + "_" + header.Value);
+                }
+
+                await next.Invoke();
+            });
+
+            var options = new IdentityServerMiddlewareOptions();
+            
+            app.UseIdentityServer(new IdentityServerMiddlewareOptions()
+            {
+                
+            }
+                );
 
             app.UseAuthorization();
             app.UseEndpoints(endpoints =>

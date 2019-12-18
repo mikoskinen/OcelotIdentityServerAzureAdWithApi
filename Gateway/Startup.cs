@@ -32,10 +32,13 @@ namespace Gateway
             services.AddAuthentication("Bearer")
                 .AddJwtBearer("Bearer", options =>
                 {
-                    options.Authority = "http://localhost:5000";
+                    options.Authority = "https://localhost:44334/idservice";
                     options.RequireHttpsMetadata = false;
-
-                    options.Audience = "api1";
+                    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
+                    {
+                        // Either list all the scopes here or use something like a "gateway" scope which is always required
+                        ValidAudiences = new List<string>() { "microservice1", "microservice2", "supermicroservice" }
+                    };
                 });
         }
 

@@ -2,39 +2,50 @@
 
 Demo for a scenario where the following tools are used:
 
-* Ocelot Gateway
-* Api behind the Ocelot Gateway
+* Ocelot Gateway (Gateway.sln)
+* Microservices behind the Ocelot Gateway (Microservices.sln)
+* Website in front of the Ocelot Gateway (MvcTestSite.sln) 
+* IdentityServer (IdentityServer.sln)
 * Azure AD
-* IdentityServer
 
 Requires .NET Core SDK 3.1.100.
 
-In this demo, routing to IdentityServer doesn't happen through Ocelot. Instead, the following model is used:
+The following services are behind the Ocelot:
+* Microservice1
+* Microservice2
+* SuperMicroservice
+* IdentityServer
 
-* User or API & Azure Ad & IdentityServer are "outside" the gateway's regime.
-* Api-projects are "inside" the Ocelot Gateway. 
+MvcTestside sits in front of the Gateway.
 
-Similar to this:
+[!Diagram.png]()
 
-![](https://lh6.googleusercontent.com/pdgGksm0pm0p64dk4JtYzdQmXAHTPVwI9-S_yOF925YH299PT6H18dsQ_2XH6BTdx1NFAYXsoZ2_e9LyO7mWpO32vAbMCVEcUJa_fws-qLPvVatfW656JKE_8UJMLJ_cQT49y8eb)
+## Permissions
 
-It *should be* possible to move IdentityServer "inside" the Ocelot's regime.
+By default the following permissions are applied:
+
+* Microservice1 can call Microservice2 but not SuperMicroservice.
+* Microservice2 can call Microservice1 but not SuperMicroservice.
+* SuperMicroservice can call Microservice1 and Microservice2.
+* MvcTestSite's client can call Microservice1 and Microservice2 but not SuperMicroservice.
+* MvcTestSite's Azure AD signed user can call Microservice1, Microservice2 and SuperMicroservice.
 
 ## Testing
 
+Use *MvcTestSite* to test microservices calling each other. The same site can be used to test Azure Ad sign-in and the calling of a microservice through the gateway.
+
+Run the solutions in the following order:
+
+1. Microservices (should start Microservice1, Microservice2 and SuperMicroservice in the following ports: 44392, 44393, 44394)
+2. Gateway (https://localhost:44334/)
+3. IdentityServer (http://localhost:5000/)
+4. MvcTestSite (https://localhost:44322/)
+
+Use "Privacy"-page to sign-in with Azure AD and to call the Supermicroservice.
+
+## Azure Ad configuration
 Create a new Azure AD app registration:
 
 ![](azuread.png)
 
 Copy the Azure Ad application settings to IdentityServer/Startup.cs.
-
-Then run the applications in the following order:
-
-1. Api (should open to https://localhost:44392/)
-2. Gateway (https://localhost:44334/)
-3. IdentityServer (http://localhost:5000/)
-4. MvcTestSite (https://localhost:44322/)
-
-To test, click "Call API with Client ID (not using authenticated user)" from the home page. Use should see something like the following: Hello from Weather API. Claims: nbf:1575980295, exp:1575983895, iss:http://localhost:5000, aud:api1, client_id:client, scope:api1
-
-Then navigate to "Privacy"-page and authenticate with local user (bob/bob) or using AzureAd. Click "Call API with authenticated user". You should see the following: Hello from Weather API. Claims: nbf:1575980335, exp:1575983935, iss:http://localhost:5000, aud:api1, client_id:mvc, http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier:88421113, auth_time:1575980335, http://schemas.microsoft.com/identity/claims/identityprovider:local, http://schemas.microsoft.com/ws/2008/06/identity/claims/role:Administrator, http://schemas.microsoft.com/ws/2008/06/identity/claims/role:User, name:bob, scope:openid, scope:profile, scope:api1, http://schemas.microsoft.com/claims/authnmethodsreferences:pwd
