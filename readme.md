@@ -16,7 +16,7 @@ The following services are behind the Ocelot:
 * SuperMicroservice
 * IdentityServer
 
-MvcTestside sits in front of the Gateway.
+MvcTestsite sits in front of the Gateway.
 
 ![Architecture diagram](diagram.png)
 
@@ -41,7 +41,7 @@ Run the solutions in the following order:
 3. IdentityServer (http://localhost:5000/)
 4. MvcTestSite (https://localhost:44322/)
 
-Use "Privacy"-page to sign-in with Azure AD and to call the Supermicroservice.
+Use "Privacy"-page to sign-in with Azure AD and to call the SuperMicroservice.
 
 ## Azure Ad configuration
 Create a new Azure AD app registration:
