@@ -1,15 +1,9 @@
 // Copyright (c) Brock Allen & Dominick Baier. All rights reserved.
 // Licensed under the Apache License, Version 2.0. See LICENSE in the project root for license information.
-
-
 using id2;
-using IdentityModel;
 using IdentityServer4;
 using IdentityServer4.Models;
 using IdentityServer4.Services;
-using IdentityServer4.Test;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.AzureAD.UI;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -19,8 +13,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Microsoft.IdentityModel.Tokens;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
@@ -42,15 +34,17 @@ namespace IdentityServer
         {
             services.Configure<ForwardedHeadersOptions>(options =>
             {
-                options.ForwardedHeaders =
-                    ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
+                options.ForwardedHeaders = ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
             });
+
             services.AddControllersWithViews()
                 .AddRazorRuntimeCompilation();
 
+            // Change these to match your Azure AD configuration.
             var tenantId = "37e55da6-fb62-456a-8d8e-f6f5b649092f";
             var clientId = "5be19e30-1ea9-4690-a37f-960d2190d4a3";
 
+            // The following enables External authentication (Azure AD) in IdentityServer
             services.AddAuthentication()
                 .AddOpenIdConnect("oidc", "Azure Ad Demo", options =>
                 {
@@ -69,12 +63,7 @@ namespace IdentityServer
                     };
                 });
 
-            var builder = services.AddIdentityServer(x =>
-            {
-                x.IssuerUri = "https://localhost:44334/idservice";
-                
-                //x.PublicOrigin = "https://localhost:44334/";
-            })
+            var builder = services.AddIdentityServer()
                 .AddInMemoryIdentityResources(Config.Ids)
                 .AddInMemoryApiResources(Config.Apis)
                 .AddInMemoryClients(Config.Clients)
@@ -89,6 +78,8 @@ namespace IdentityServer
         {
             app.Use((context, next) =>
             {
+                // PathBase must be set or the discovery documents etc. can't be found.
+                // Could be passed as a header from Ocelot instead of hard coding.
                 context.Request.PathBase = new PathString("/idservice");
                 return next();
             });
@@ -102,27 +93,10 @@ namespace IdentityServer
 
             app.UseStaticFiles();
             app.UseRouting();
-
-            app.Use(async (context, next) =>
-            {
-                var headers = context.Request.Headers;
-                foreach (var header in headers)
-                {
-                    System.Diagnostics.Debug.WriteLine(header.Key + "_" + header.Value);
-                }
-
-                await next.Invoke();
-            });
-
-            var options = new IdentityServerMiddlewareOptions();
             
-            app.UseIdentityServer(new IdentityServerMiddlewareOptions()
-            {
-                
-            }
-                );
-
+            app.UseIdentityServer();
             app.UseAuthorization();
+
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapDefaultControllerRoute();

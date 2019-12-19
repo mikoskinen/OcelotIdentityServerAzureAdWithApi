@@ -1,15 +1,8 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Ocelot.DependencyInjection;
 using Ocelot.Middleware;
 
@@ -29,14 +22,16 @@ namespace Gateway
         {
             services.AddOcelot();
 
+            // This enables Ocelot to authenticate requests. The caller must have a token provided by the Authority (IdentityServer) and 
+            // the token must contain one of the ValidAudiences.
             services.AddAuthentication("Bearer")
                 .AddJwtBearer("Bearer", options =>
                 {
                     options.Authority = "https://localhost:44334/idservice";
-                    options.RequireHttpsMetadata = false;
                     options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters()
                     {
                         // Either list all the scopes here or use something like a "gateway" scope which is always required
+                        // Microservice-specific requirements are defined in ocelot.json
                         ValidAudiences = new List<string>() { "microservice1", "microservice2", "supermicroservice" }
                     };
                 });
